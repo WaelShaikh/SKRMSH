@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+     <head>
+          <meta charset="utf-8">
+          <title>Phaser Authoritative Multiplayer</title>
+          <style>
+               html,body{
+                    margin:0;
+                    height:100%;
+                    width:100%;
+               }
+          </style>
+     </head>
+     <body>
+		  <script>(function () { var script = document.createElement('script'); script.src="//cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script); script.onload = function () { eruda.init() } })();</script>
+          <script src="/socket.io/socket.io.js"></script>
+          <script type="text/javascript" src="js/phaser.min.js"></script>
+          <script type="text/javascript" src="js/game.js"></script>
+          <div id="fullscreen-btn" onclick="fullscreen()" style="position:fixed;height:29px;width:29px;background-color:white;background-repeat:no-repeat;background-size:25px 25px;background-position:2px 2px;top:0;z-index:1;background-image: url('assets/maximize.svg');"></div>
+
+          <div id="phaser"></div>
+          <script type="text/javascript">
+               window.oncontextmenu = function(event) {
+                   event.preventDefault();
+                   event.stopPropagation();
+                   return false;
+               };
+          </script>
+     </body>
+</html>
