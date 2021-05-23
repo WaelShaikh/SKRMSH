@@ -1,6 +1,6 @@
 # SKRMSH
 
-A multiplayer top-down pixel-art twin-stick shooter.
+SKRMSH (pronounced skirmish) is a multiplayer top-down pixel-art twin-stick shooter.
 
 ![screenshot 1](/images/SKRMSH_1.png)
 ![screenshot 2](/images/SKRMSH_2.png)
