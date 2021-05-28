@@ -128,11 +128,11 @@ var config = {
     //height: 600,
     width: width,
     height: height,
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    },
+//    scene: {
+//        preload: preload,
+//        create: create,
+//        update: update
+//    },
     scale: {
         mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT,
     },
@@ -151,7 +151,9 @@ var config = {
 
 var game = new Phaser.Game(config);
 
-function preload() {
+var gameScene = new Phaser.Scene("game");
+
+gameScene.preload = function() {
     this.load.image('player', 'assets/white.png');
     this.load.image('bullet', 'assets/black.png');
 //	this.load.image('bg', 'assets/Map.png');
@@ -168,7 +170,8 @@ function preload() {
     */
 }
 
-function create() {
+gameScene.create = function() {
+	this.cameras.main.setVisible(false);
     var self = this;
     this.socket = io();
 
@@ -363,7 +366,7 @@ function create() {
 	feed.depth = 10;
 }
 
-function update(time, delta) {
+gameScene.update = function(time, delta) {
     if (this.player) {
         if (this.bulletCooldown > 0) {
             // Reduce bullet cooldown
@@ -525,6 +528,7 @@ function addPlayer(self, playerInfo) {
 //    self.cameras.main.setBounds(0, 0, width * 1.5, width * 1.5);
 	self.cameras.main.setBounds(0, 0,self.mapWidth * 6, self.mapHeight * 6);
     self.cameras.main.roundPixels = true;
+	self.cameras.main.setVisible(true);
 }
 
 function addOtherPlayers(self, playerInfo) {
@@ -622,3 +626,24 @@ function addOtherPlayers(self, playerInfo) {
     }.bind(this));
 */
 }
+
+var titleScene = new Phaser.Scene("title");
+
+titleScene.preload = function() {
+	this.load.image('title', 'assets/title.png');
+//  this.load.image('bg', 'assets/Map.png');
+    this.load.image('bg', 'assets/2PMap.png');
+}
+
+titleScene.create = function() {
+	this.mapWidth = this.textures.get('bg').getSourceImage().width;
+    this.mapHeight = this.textures.get('bg').getSourceImage().height;
+    this.add.image(0, 0, 'title').setOrigin(0, 0).setDisplaySize(1024,1024);
+
+	this.input.on("pointerdown", ()=>{game.scene.start("game");game.scene.stop("title")}, titleScene);
+}
+
+game.scene.add('title', titleScene);
+game.scene.add("game", gameScene);
+
+game.scene.start('title');
