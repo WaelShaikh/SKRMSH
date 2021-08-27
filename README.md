@@ -7,3 +7,9 @@ SKRMSH (pronounced skirmish) is a mobile multiplayer top-down pixel-art twin-sti
 ![screenshot 3](/images/SKRMSH_3.png)
 
 Play at: [skrmsh.glitch.me](skrmsh.glitch.me)
+
+# Install
+    git clone https://github.com/WaelShaikh/SKRMSH.git
+    cd SKRMSH/
+    npm install
+    npm start
