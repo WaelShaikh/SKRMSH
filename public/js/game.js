@@ -3,6 +3,9 @@ const BULLET_SPEED = 1000;
 const BULLET_LIFE = 1500;
 const BULLET_DAMAGE = 10;
 var FIRE_RATE = 100;
+var MAG_SIZE = 20;
+var BULLETS_LEFT = MAG_SIZE;
+var RELOAD_TIME = 1000
 var feed;
 var feedTimeout;
 
@@ -73,18 +76,30 @@ class Bullets extends Phaser.Physics.Arcade.Group
             visible: false,
             classType: Bullet
         });
+		this.bulletCooldown = 0;
+		this.magSize = MAG_SIZE;
+		this.bulletsLeft = BULLETS_LEFT;
     }
 
     fireBullet(shooter)
     {
 		this.shooter = shooter;
+		this.bulletCooldown = FIRE_RATE;
+		this.reloadTime = RELOAD_TIME;
 
         let bullet = this.getFirstDead(false);
 
         if (bullet)
         {
             bullet.fire(shooter);
-        }
+			this.bulletsLeft--;
+			//console.log(this.bulletsLeft);
+			if (this.bulletsLeft == 0)
+			{
+				this.bulletsLeft = this.magSize;
+				this.bulletCooldown = this.reloadTime;
+			}
+		}
     }
 }
 /*
@@ -113,6 +128,7 @@ if (window.innerHeight > window.innerWidth)
     var ratio = screen.height / screen.width;
     var width = 1024;
     var height = width / ratio;
+	height += 10;
 }
 else
 {
@@ -165,15 +181,16 @@ gameScene.preload = function() {
 //	this.load.tilemapTiledJSON('map', 'assets/Map.json');
 	this.load.tilemapTiledJSON('map', 'assets/2PMap.json');
     this.load.plugin('rexvirtualjoystickplugin', 'js/rexvirtualjoystickplugin.min.js');
-    /*
-    this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
-    */
+    //this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
 }
 
 gameScene.create = function() {
 	this.cameras.main.setVisible(false);
     var self = this;
     this.socket = io();
+
+	this.LPointer = -1;
+	this.RPointer = -1;
 
     this.otherPlayers = this.physics.add.group();
 
@@ -314,27 +331,49 @@ gameScene.create = function() {
 
     this.movementJoyStick = this.plugins.get('rexvirtualjoystickplugin').add(this.scene, {
         x: 200,
+		x: -500,
         y: this.cameras.main.height - 150,
+		y: -500,
         radius: 40,
-        forceMin: 0,
+        //forceMin: 0,
         base: this.add.circle(0, 0, 60, 0x888888, 0.0).setDepth(100).setStrokeStyle(5, 0xffffff, 0.5),
         //thumb: this.add.image(0, 0, 'joystick').setDisplaySize(80, 80).setDepth(100),
-        thumb: this.add.circle(0, 0, 60, 0xffffff, 0.5).setDisplaySize(40, 40).setDepth(100),
-    }).on('update', () => {}, this);
+        thumb: this.add.circle(0, 0, 60, 0xffffff, 0.5).setDisplaySize(80, 80).setDepth(100),
+    });//.on('update', () => {}, this);
 
     this.shootJoyStick = this.plugins.get('rexvirtualjoystickplugin').add(this.scene, {
         x: this.cameras.main.width - 200,
+		x: -500,
         y: this.cameras.main.height - 150,
-        radius: 80,
-        forceMin: 0,
+		y: -500,
+        radius: 35,
+        //forceMin: 0,
         base: this.add.circle(0, 0, 80, 0x888888, 0.0).setDepth(100).setStrokeStyle(5, 0xffffff, 0.5),
         //thumb: this.add.image(0, 0, 'joystick').setDisplaySize(80, 80).setDepth(100),
-        thumb: this.add.circle(0, 0, 60, 0xffffff, 0.5).setDisplaySize(40, 40).setDepth(100),
-    }).on('update', () => {}, this);
+        thumb: this.add.circle(0, 0, 60, 0xffffff, 0.5).setDisplaySize(80, 80).setDepth(100),
+    });//.on('update', () => {}, this);
 
+	this.input.on('pointerdown', function(pointer){
+		if (pointer.x <= 512 && this.movementJoyStick.touchCursor.pointer == undefined) {
+			this.movementJoyStick.setPosition(pointer.x, pointer.y);
+			this.LPointer = pointer.id;
+		}
+		else if (pointer.x >= 512 && this.shootJoyStick.touchCursor.pointer == undefined) {
+			this.shootJoyStick.setPosition(pointer.x, pointer.y);
+			this.RPointer = pointer.id;
+		}
+ 	}, this);
 
+	this.input.on('pointerup', function(pointer){
+        if (pointer.x <= 512 && pointer.id == this.LPointer) {
+            this.movementJoyStick.setPosition(-500, -500);
+        }
+        else if (pointer.x >= 512 && pointer.id == this.RPointer) {
+            this.shootJoyStick.setPosition(-500, -500);
+        }
+    }, this);
     //this.bullets = new Bullets(this);
-    this.bulletCooldown = 0;
+    //this.bulletCooldown = 0;
 
     //this.rotation = 0;
 
@@ -355,9 +394,9 @@ gameScene.create = function() {
     this.CollisionMap = this.map.createStaticLayer('Collision', this.tileset, 0, 0).setDisplaySize(width * 1.5, width * 1.5 * this.mapHeight / this.mapWidth);
 */
 
-	this.Map = this.map.createStaticLayer('Map', this.tileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
-	this.ShadowMap = this.map.createStaticLayer('Shadows', this.shadowtileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
-	this.CollisionMap = this.map.createStaticLayer('Collision', this.tileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
+	this.Map = this.map.createLayer('Map', this.tileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
+	this.ShadowMap = this.map.createLayer('Shadows', this.shadowtileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
+	this.CollisionMap = this.map.createLayer('Collision', this.tileset, 0, 0).setDisplaySize(this.mapWidth * 6, this.mapHeight * 6);
 
     this.CollisionMap.setCollisionByExclusion(-1, true);
 
@@ -368,9 +407,9 @@ gameScene.create = function() {
 
 gameScene.update = function(time, delta) {
     if (this.player) {
-        if (this.bulletCooldown > 0) {
+        if (this.player.bullets.bulletCooldown > 0) {
             // Reduce bullet cooldown
-            this.bulletCooldown -= delta;
+            this.player.bullets.bulletCooldown -= delta;
         }
 
         if (this.movementJoyStick.force) {
@@ -394,12 +433,12 @@ gameScene.update = function(time, delta) {
             this.player.setAngle(this.shootJoyStick.angle);
             //this.rotation = this.shootJoyStick.angle;
             // Fire bullet according to joystick
-            if (this.shootJoyStick.force >= this.shootJoyStick.radius && this.bulletCooldown <= 0) {
+            if (this.shootJoyStick.force >= this.shootJoyStick.radius && this.player.bullets.bulletCooldown <= 0) {
 
                 this.player.bullets.fireBullet(this.player);
                 shooting = true;
                 this.socket.emit('shoot', this.player.rotation);
-                this.bulletCooldown = FIRE_RATE;
+                //this.player.bullets.bulletCooldown = FIRE_RATE;
             }
         }
 
