@@ -365,10 +365,10 @@ gameScene.create = function() {
  	}, this);
 
 	this.input.on('pointerup', function(pointer){
-        if (pointer.x <= 512 && pointer.id == this.LPointer) {
+        if (pointer.id == this.LPointer) {
             this.movementJoyStick.setPosition(-500, -500);
         }
-        else if (pointer.x >= 512 && pointer.id == this.RPointer) {
+        if (pointer.id == this.RPointer) {
             this.shootJoyStick.setPosition(-500, -500);
         }
     }, this);
